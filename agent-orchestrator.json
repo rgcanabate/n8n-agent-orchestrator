@@ -1,0 +1,373 @@
+{
+  "name": "agent-orchestrator",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Tu tarea es clasificar la intención del usuario y extraer datos.\nMensaje del usuario: {{ $node[\"Chat Trigger\"].json.chatInput }}\n\nDebes devolver ÚNICAMENTE un JSON con esta estructura exacta, sin campos extra:\n\nSi action = \"create\":\n{\n  \"action\": \"create\",\n  \"evento\": \"<descripción del evento>\",\n  \"inicio\": \"<fecha inicio en formato dd/MM/yyyy>\",\n  \"final\": \"<fecha fin en formato dd/MM/yyyy, si no hay usa la misma que inicio>\",\n  \"hora_inicio\": \"<hora en formato HH:mm, si no se menciona dejar vacío>\",\n  \"hora_final\": \"<hora fin en formato HH:mm, si no se menciona dejar vacío>\"\n}\n\nSi action = \"list\":\n{\n  \"action\": \"list\",\n  \"fecha\": \"<fecha a consultar en formato dd/MM/yyyy>\"\n}\n\nSi action = \"delete\":\n{\n  \"action\": \"delete\",\n  \"evento\": \"<descripción del evento a borrar>\",\n  \"fecha\": \"<fecha en formato dd/MM/yyyy>\"\n}\n\nCONTEXTO TEMPORAL:\n- Hoy es: {{ $now.format('EEEE, dd/MM/yyyy') }}\n- Año actual: 2026\n\nREGLAS:\n- Si el usuario agenda/anota algo → action = \"create\"\n- Si el usuario pregunta qué tiene → action = \"list\"\n- Si el usuario cancela/quita algo → action = \"delete\"\n- Las fechas SIEMPRE en formato dd/MM/yyyy\n- NUNCA uses otros nombres de campos\n- NUNCA escribas texto fuera del JSON",
+        "options": {
+          "systemMessage": "="
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        0,
+        16
+      ],
+      "id": "1c00b4ff-e0ba-434e-888a-0ce368f51de4",
+      "name": "AI Agent",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "model": "llama3.1:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        16,
+        240
+      ],
+      "id": "52aef486-f52f-4e9e-9f90-8ba57ecd393c",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "14HqU2wK3XVzHmGG",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        144,
+        240
+      ],
+      "id": "c18c9697-1c02-476f-9b4f-b25aaf6f384d",
+      "name": "Simple Memory",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data.action }}",
+                    "rightValue": "create",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "d10b449d-6450-407b-8fcf-d19559295c3b"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "71e0d7fd-dfc8-4a8a-bb8a-f100c1680428",
+                    "leftValue": "={{ $json.data.action }}",
+                    "rightValue": "delete",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "bea06db5-12dc-4baa-a277-3c554d3d791b",
+                    "leftValue": "={{ $json.data.action }}",
+                    "rightValue": "list",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        -16
+      ],
+      "id": "81b25145-f960-4f1f-8fd7-4948abdca69d",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2sHf47GE2af9ZZ9W",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2sHf47GE2af9ZZ9W",
+          "cachedResultName": "My Sub-Workflow 1"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1024,
+        -80
+      ],
+      "id": "14f01619-d29f-4bf3-9f1a-fc2c20d97caf",
+      "name": "Call 'My Sub-Workflow 1'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "nOGV85uPNJgbPUdY",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/nOGV85uPNJgbPUdY",
+          "cachedResultName": "My Sub-Workflow 2"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1024,
+        112
+      ],
+      "id": "870177b9-1de8-4161-8b05-c4971faee68e",
+      "name": "Call 'My Sub-Workflow 2'"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawOutput = $json.output || \"\";\nlet result = {\n  isValid: false,\n  errorMessage: \"\",\n  action: \"unknown\",\n  data: {}\n};\n\n// --- Nombres conocidos de campos de inicio y fin ---\nconst INICIO_KEYS = [\"inicio\", \"start\", \"startdate\", \"fecha_inicio\", \"fecha\", \"date\", \"from\", \"begin\"];\nconst FIN_KEYS    = [\"fin\", \"end\", \"enddate\", \"fecha_fin\", \"final\", \"to\", \"until\"];\n\n// --- Busca recursivamente en cualquier nivel del JSON ---\nfunction deepFind(obj, keys) {\n  if (!obj || typeof obj !== \"object\") return null;\n  for (const key of Object.keys(obj)) {\n    if (keys.includes(key.toLowerCase())) {\n      const val = obj[key];\n      if (val && typeof val === \"string\") return val;\n    }\n  }\n  for (const key of Object.keys(obj)) {\n    const val = obj[key];\n    if (val && typeof val === \"object\" && !Array.isArray(val)) {\n      const found = deepFind(val, keys);\n      if (found) return found;\n    }\n  }\n  return null;\n}\n\n// --- Resuelve lenguaje natural + todos los formatos de fecha ---\nfunction resolveNaturalDate(rawDate) {\n  const today = new Date();\n  today.setHours(0, 0, 0, 0);\n  const lower = (rawDate || \"\").toLowerCase().trim();\n  if (!lower) return today;\n\n  if (lower.includes(\"hoy\")) return today;\n\n  if (lower.includes(\"pasado mañana\")) {\n    const d = new Date(today); d.setDate(d.getDate() + 2); return d;\n  }\n  if (lower.includes(\"mañana\")) {\n    const d = new Date(today); d.setDate(d.getDate() + 1); return d;\n  }\n\n  const daysMatch = lower.match(/(\\d+)\\s*d[íi]as?/);\n  if (daysMatch) { const d = new Date(today); d.setDate(d.getDate() + parseInt(daysMatch[1])); return d; }\n\n  const weeksMatch = lower.match(/(\\d+)\\s*semanas?/);\n  if (weeksMatch) { const d = new Date(today); d.setDate(d.getDate() + parseInt(weeksMatch[1]) * 7); return d; }\n\n  const monthsMatch = lower.match(/(\\d+)\\s*mes(es)?/);\n  if (monthsMatch) { const d = new Date(today); d.setMonth(d.getMonth() + parseInt(monthsMatch[1])); return d; }\n\n  // \"5 de agosto de 2026\"\n  const meses = { enero:0,febrero:1,marzo:2,abril:3,mayo:4,junio:5,julio:6,agosto:7,septiembre:8,octubre:9,noviembre:10,diciembre:11 };\n  const espMatch = lower.match(/(\\d{1,2})\\s+de\\s+([a-záéíóú]+)\\s+de\\s+(\\d{4})/);\n  if (espMatch && meses[espMatch[2]] !== undefined) {\n    return new Date(parseInt(espMatch[3]), meses[espMatch[2]], parseInt(espMatch[1]));\n  }\n\n  // dd/mm/yyyy\n  const dmyMatch = lower.match(/(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})/);\n  if (dmyMatch) return new Date(`${dmyMatch[3]}-${dmyMatch[2].padStart(2,'0')}-${dmyMatch[1].padStart(2,'0')}T00:00:00`);\n\n  // yyyy-mm-dd\n  const isoMatch = lower.match(/\\d{4}-\\d{2}-\\d{2}/);\n  if (isoMatch) return new Date(`${isoMatch[0]}T00:00:00`);\n\n  return today;\n}\n\n// --- Date → ISO 8601 con Z ---\nfunction toISO(date) {\n  const pad = n => String(n).padStart(2, '0');\n  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}Z`;\n}\n\ntry {\n  const jsonMatch = rawOutput.match(/\\{[\\s\\S]*\\}/);\n  if (!jsonMatch) throw new Error(\"No JSON found\");\n\n  const parsed = JSON.parse(jsonMatch[0]);\n  result.action = (parsed.action || \"unknown\").toLowerCase();\n\n  // --- CREATE ---\n  if (result.action === \"create\") {\n    const rawInicio = deepFind(parsed, INICIO_KEYS) || \"\";\n    const rawFin    = deepFind(parsed, FIN_KEYS)    || \"\";\n\n    const inicioDate = resolveNaturalDate(rawInicio);\n    const finalDate  = rawFin ? resolveNaturalDate(rawFin) : new Date(inicioDate);\n\n    // Hora inicio\n    const horaInicio = parsed.hora_inicio || parsed.hora || \"\";\n    const horaMatch  = horaInicio.match(/(\\d{1,2}):(\\d{2})/);\n    if (horaMatch) {\n      inicioDate.setHours(parseInt(horaMatch[1]), parseInt(horaMatch[2]), 0, 0);\n    } else {\n      inicioDate.setHours(0, 0, 0, 0);\n    }\n\n    // Hora final\n    const horaFinal    = parsed.hora_final || parsed.hora_fin || \"\";\n    const horaFinMatch = horaFinal.match(/(\\d{1,2}):(\\d{2})/);\n    if (horaFinMatch) {\n      finalDate.setHours(parseInt(horaFinMatch[1]), parseInt(horaFinMatch[2]), 0, 0);\n    } else if (horaMatch) {\n      // Hay hora inicio pero no fin → +1 hora por defecto\n      finalDate.setHours(parseInt(horaMatch[1]) + 1, parseInt(horaMatch[2]), 0, 0);\n    } else {\n      finalDate.setHours(23, 59, 59, 0);\n    }\n\n    result.data = {\n      action: \"create\",\n      evento: typeof parsed.evento === \"string\" ? parsed.evento : (parsed.summary || parsed.title || parsed.destination || \"\"),\n      inicio: toISO(inicioDate),\n      final:  toISO(finalDate)\n    };\n    result.isValid = true;\n  }\n\n  // --- LIST ---\n  else if (result.action === \"list\") {\n    const rawDate = parsed.date || parsed.fecha || parsed.query || \"\";\n    const dateMatch = rawDate.match(/(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})/);\n    result.data = {\n      action: \"list\",\n      searchDate: dateMatch\n        ? `${dateMatch[3]}-${dateMatch[2].padStart(2,'0')}-${dateMatch[1].padStart(2,'0')}`\n        : new Date().toISOString().split('T')[0]\n    };\n    result.isValid = true;\n  }\n\n  // --- OTRAS ACCIONES ---\n  else {\n    result.data = parsed;\n    result.isValid = true;\n  }\n\n} catch (error) {\n  result.isValid = false;\n  result.errorMessage = \"Error: \" + error.message;\n}\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        -64
+      ],
+      "id": "e8aa72db-3b6c-4c67-804d-ed96a786bd05",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bbf7ca6f-19fe-4aef-92b9-0f40b22041f4",
+              "leftValue": "={{ $json.isValid }}",
+              "rightValue": "=true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        576,
+        16
+      ],
+      "id": "11ea816a-0aec-4189-a0c0-27a1ab9802f1",
+      "name": "If"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        16
+      ],
+      "id": "c5c1cf85-52db-4509-9734-200a7bd5e82d",
+      "name": "Chat Trigger"
+    }
+  ],
+  "pinData": {
+    "Chat Trigger": [
+      {
+        "json": {
+          "sessionId": "testID",
+          "chatInput": "mañana a las 20 voy a escaalr"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Call 'My Sub-Workflow 1'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "Call 'My Sub-Workflow 2'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Europe/Madrid",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "b6a218f9-ac24-40b5-813d-458b7e96ecec",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "89a3f8548ab3d21f2afa32895b7219d17650cfb416b715e6846a2aa26d6baef4"
+  },
+  "id": "KWBmXmG1jYVjHLlt-bNIw",
+  "tags": []
+}

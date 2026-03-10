@@ -1,0 +1,72 @@
+{
+  "name": "agent-list",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        272,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "ramongarciargc@gmail.com",
+          "mode": "list",
+          "cachedResultName": "ramongarciargc@gmail.com"
+        },
+        "timeMin": "={{ $json.data.searchDate }}T00:00:00Z",
+        "timeMax": "={{ $json.data.searchDate }}T23:59:59Z",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        352
+      ],
+      "id": "a337501f-4fe1-4297-970f-ac5adb040ef4",
+      "name": "Get many events",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "aX1EhD9UOHl0qvgI",
+          "name": "Google Calendar account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get many events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "f65b9351-6bfc-45a1-951f-bcab900f9765",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "89a3f8548ab3d21f2afa32895b7219d17650cfb416b715e6846a2aa26d6baef4"
+  },
+  "id": "nOGV85uPNJgbPUdY",
+  "tags": []
+}
